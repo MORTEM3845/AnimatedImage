@@ -23,6 +23,7 @@ namespace AnimatedImage.Formats
         private IBitmapFace _bitmap;
 
         private byte[] _rawWebp;
+        private byte[] _frameBuffer;
         GCHandle _pinnedWebP;
         private WebPAnimDecoder _decoder;
 
@@ -43,6 +44,7 @@ namespace AnimatedImage.Formats
 
             Width = (int)anim_info.canvas_width;
             Height = (int)anim_info.canvas_height;
+            _frameBuffer = new byte[checked(Width * Height * 4)];
 
             _bitmap = factory.Create(Width, Height);
 
@@ -80,6 +82,7 @@ namespace AnimatedImage.Formats
 
             Width = renderer.Width;
             Height = renderer.Height;
+            _frameBuffer = new byte[checked(Width * Height * 4)];
 
             _factory = renderer._factory;
             _bitmap = _factory.Create(Width, Height);
@@ -151,9 +154,8 @@ namespace AnimatedImage.Formats
                     throw new Exception("WebPAnimDecoderGetNext: error");
                 }
             }
-            var data = new byte[Width * Height * 4];
-            Marshal.Copy(buf, data, 0, data.Length);
-            return data;
+            Marshal.Copy(buf, _frameBuffer, 0, _frameBuffer.Length);
+            return _frameBuffer;
         }
 
         public override void ProcessFrame(int frameIndex)
